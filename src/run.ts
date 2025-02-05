@@ -3,6 +3,7 @@ import * as readline from 'readline';
 
 import { deepResearch, writeFinalReport } from './deep-research';
 import { generateFeedback } from './feedback';
+import { o3MiniModel, gpt4Model, gpt4MiniModel, g_15pro} from './ai/providers';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -18,8 +19,34 @@ function askQuestion(query: string): Promise<string> {
   });
 }
 
+type ModelType = typeof MODEL_OPTIONS[keyof typeof MODEL_OPTIONS];
+
+
+const MODEL_OPTIONS = {
+  'GPT-4': gpt4Model,
+  'GPT-4 Mini': gpt4MiniModel,
+  'O3 Mini': o3MiniModel,
+  'Gemini 1.5 Pro': g_15pro
+} as const;
+
 // run the agent
 async function run() {
+  // Add model selection
+  console.log('\nAvailable models:');
+  Object.entries(MODEL_OPTIONS).forEach(([name, _], index) => {
+    console.log(`${index + 1}. ${name}`);
+  });
+
+  const modelChoice = parseInt(
+    await askQuestion('\nSelect model number (default 1): '),
+    10
+  ) || 1;
+
+  console.log(modelChoice)
+
+  const selectedModel = Object.values(MODEL_OPTIONS)[modelChoice - 1] ?? o3MiniModel;
+
+  console.log(selectedModel)
   // Get initial query
   const initialQuery = await askQuestion('What would you like to research? ');
 
@@ -42,6 +69,7 @@ async function run() {
   // Generate follow-up questions
   const followUpQuestions = await generateFeedback({
     query: initialQuery,
+    model: selectedModel ,
   });
 
   console.log(
@@ -66,6 +94,7 @@ ${followUpQuestions.map((q, i) => `Q: ${q}\nA: ${answers[i]}`).join('\n')}
 
   const { learnings, visitedUrls } = await deepResearch({
     query: combinedQuery,
+    model: selectedModel,
     breadth,
     depth,
   });
@@ -78,6 +107,7 @@ ${followUpQuestions.map((q, i) => `Q: ${q}\nA: ${answers[i]}`).join('\n')}
 
   const report = await writeFinalReport({
     prompt: combinedQuery,
+    model: selectedModel,
     learnings,
     visitedUrls,
   });

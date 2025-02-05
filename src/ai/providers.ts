@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
 import { getEncoding } from 'js-tiktoken';
 
 import { RecursiveCharacterTextSplitter } from './text-splitter';
@@ -8,6 +9,16 @@ import { RecursiveCharacterTextSplitter } from './text-splitter';
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_KEY!,
 });
+
+//const geminiai = createOpenAI({
+//  apiKey: process.env.GEMINIAI_KEY!,
+//  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+//});
+
+const geminiai = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINIAI_KEY!,
+})
+
 
 // Models
 
@@ -19,6 +30,9 @@ export const gpt4MiniModel = openai('gpt-4o-mini', {
 });
 export const o3MiniModel = openai('o3-mini', {
   reasoningEffort: 'medium',
+  structuredOutputs: true,
+});
+export const g_15pro = geminiai('gemini-1.5-pro', {
   structuredOutputs: true,
 });
 
